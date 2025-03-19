@@ -1,0 +1,430 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'index/css/b4.css' %}">
+<script src="{% static 'index/js/b4.js' %}"></script>
+
+
+<div id="AgregarPersonalModal" class="modal" style="overflow: scroll;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info" style="background-color: rgb(0, 86, 52 ,255) !important; border-radius: 1px;">
+                <h5 class="modal-title">Agregar nuevo</h5>
+            </div>
+            <div class="modal-body bg-dark text-white">
+                <form method="POST" action="{% url 'AddProducto' %}" enctype="multipart/form-data">{% csrf_token %}
+
+                    <div class="form-group"><!-- Codigo de barras -->
+                        {{ form_add.codigo_barras.label }}
+                        {{ form_add.codigo_barras|add_class:"form-control" }}
+                    </div>
+
+                    <div class="form-group"><!-- Descripción -->
+                        {{ form_add.descripcion.label }}
+                        {{ form_add.descripcion|add_class:"form-control" }}
+                    </div>
+
+                    <div class="form-group" id="input_imagen"><!-- imagen -->
+                        {{ form_add.imagen.label }}
+                        {{ form_add.imagen|add_class:"form-control-file" }}
+                    </div>
+
+                    <div class="form-group"><!-- categoria -->
+                        {{ form_add.categoria.label }}
+                        {{ form_add.categoria|add_class:"form-control" }}
+                    </div>
+
+                    <div class="form-group"><!-- cantidad -->
+                        {{ form_add.cantidad.label }}
+                        {{ form_add.cantidad|add_class:"form-control" }}
+                    </div>
+                    
+                    <div class="form-group"> <!-- disponibilidad -->
+                        {{ form_add.disponibilidad.label }}
+                        {{ form_add.disponibilidad|add_class:"form-checkbox"|remove_attr:"autofocus" }}
+                    </div>
+                    <style>
+                        .form-checkbox{
+                            width: 30px;
+                            height: 30px;
+                            vertical-align: middle;
+                            margin-left: 15px;
+                        }
+                    </style>
+
+                    <!-- Selección del tipo de producto -->
+                    <div class="form-group">
+                        <label for="tipo_producto">Tipo de producto:</label>
+                        <select name="tipo_producto" id="tipo_producto" class="form-control tipo_producto" onchange="toggleFields()">
+                            <option value="">Seleccionar...</option>
+                            <option value="unidad">Unidad</option>
+                            <option value="bulto">Bulto</option>
+                        </select>
+                    </div>
+
+                    <!-- Campos dinámicos para productos por unidad -->
+                    
+                    <div id="campos_unidad" name="campos_unidad" class="campos_unidad" style="margin-bottom: 10px; display: flex; flex-direction: column; padding: 10px; border: 2px solid rgb(171, 170, 170); border-radius: 4px;">
+                        <div class="form-group">
+                            {{ form_preciosU.costo.label }}
+                            {{ form_preciosU.costo|add_class:"form-control" }}
+                        </div>
+                        <div style="display: flex;">
+                            <div style="width: 40%;">
+                                <h6>Ganancia</h6>
+                                <div class="form-group">
+                                    {{ form_preciosU.gananciax1.label }}
+                                    {{ form_preciosU.gananciax1|add_class:"form-control" }}
+                                </div>
+                                <div class="form-group">
+                                    {{ form_preciosU.gananciax10.label }}
+                                    {{ form_preciosU.gananciax10|add_class:"form-control" }}
+                                </div>
+                                <div class="form-group">
+                                    {{ form_preciosU.gananciax25.label }}
+                                    {{ form_preciosU.gananciax25|add_class:"form-control" }}
+                                </div>
+                                <div class="form-group">
+                                    {{ form_preciosU.gananciax50.label }}
+                                    {{ form_preciosU.gananciax50|add_class:"form-control" }}
+                                </div>
+                                <div class="form-group">
+                                    {{ form_preciosU.gananciax100.label }}
+                                    {{ form_preciosU.gananciax100|add_class:"form-control" }}
+                                </div>
+                                <div class="form-group">
+                                    {{ form_preciosU.gananciax1000.label }}
+                                    {{ form_preciosU.gananciax1000|add_class:"form-control" }}
+                                </div>
+                            </div>
+                            <div style="width: 40%; margin-left: 60px;">
+                                <h6>Precio</h6>
+                                <div id="precio-calculado" class="form-group">
+                                    {{ form_preciosU.preciox1.label }}
+                                    {{ form_preciosU.preciox1|add_class:"form-control" }}
+                                </div>
+                                <div class="form-group">
+                                    {{ form_preciosU.preciox10.label }}
+                                    {{ form_preciosU.preciox10|add_class:"form-control" }}
+                                </div>
+                                <div id="precio-calculado" class="form-group">
+                                    {{ form_preciosU.preciox25.label }}
+                                    {{ form_preciosU.preciox25|add_class:"form-control" }}
+                                </div>
+                                <div id="precio-calculado" class="form-group">
+                                    {{ form_preciosU.preciox50.label }}
+                                    {{ form_preciosU.preciox50|add_class:"form-control" }}
+                                </div>
+                                <div id="precio-calculado" class="form-group">
+                                    {{ form_preciosU.preciox100.label }}
+                                    {{ form_preciosU.preciox100|add_class:"form-control" }}
+                                </div>
+                                <div id="precio-calculado" class="form-group">
+                                    {{ form_preciosU.preciox1000.label }}
+                                    {{ form_preciosU.preciox1000|add_class:"form-control" }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campos dinámicos para productos por bulto -->
+                    <div id="campos_bulto" name="campos_bulto" class="campos_bulto" style="margin-bottom: 10px; display: flex; padding: 10px; border: 2px solid rgb(171, 170, 170); border-radius: 4px;">
+                        <div style="width: 40%;">
+                            <div class="form-group">
+                                {{ form_preciosB.costo_bulto.label }}
+                                {{ form_preciosB.costo_bulto|add_class:"form-control" }}
+                            </div>
+                            <div class="form-group">
+                                {{ form_preciosB.ganancia_bulto.label }}
+                                {{ form_preciosB.ganancia_bulto|add_class:"form-control" }}
+                            </div>
+                        </div>
+                        <div style="width: 40%; margin-left: 60px;">
+                            <div class="form-group">
+                                {{ form_preciosB.cantidad_bulto.label }}
+                                {{ form_preciosB.cantidad_bulto|add_class:"form-control" }}
+                            </div>
+                            <div class="form-group">
+                                {{ form_preciosB.precio_bulto.label }}
+                                {{ form_preciosB.precio_bulto|add_class:"form-control" }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-dark">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            Agregar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="EditarPersonalModal" class="modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info">
+                <h5 class="modal-title text-dark">Editar</h5>
+            </div>
+            <div class="modal-body bg-dark text-white">
+                <form method="POST" action="{% url 'EditProduct' %}" enctype="multipart/form-data">{% csrf_token %}
+                    <input type="hidden" id="id_producto_editar" name="id_producto_editar">
+                    {% for field in form_editar %}
+                    <p> {{field.label}} <br>
+                        {{field|add_class:"form-control"}}</p>
+                    {% for error in field.errors %}
+                    <p class="alarma">{{error}}</p>
+                    {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                    <p class="alarma">{{error}}</p>
+                    {% endfor %}
+            
+                    <div class="modal-footer bg-dark text-white">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">
+                            Volver
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            Aceptar
+                        </button>
+                    </div>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="EliminarPersonalModal" class="modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info">
+                <h5 class="modal-title text-dark">Eliminar</h5>
+            </div>
+            <div class="modal-body bg-dark text-white">
+                <p class="labelmodal">¿Estás seguro?</p>
+                <form method="POST" action="{% url 'DeleteProducto' %}">{% csrf_token %}
+                    <input type="hidden" id="id_producto_eliminar" name="id_producto_eliminar">
+            </div>
+            <div class="modal-footer bg-dark text-white">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">
+                    Volver
+                </button>
+                <button type="submit" class="btn btn-success">
+                    Aceptar
+                </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <h3 class="text-center" style="margin-top: 10px; ">Productos    <i class="fas fa-boxes"></i></h3>
+        <div style="display: flex;">
+            
+            <form class="col-md-4 pb-2" method="get" action="{% url 'Productos' %}" style="display: flex;">
+                <label for="filtro" style="width: 290px;">Filtrar productos por:</label>
+                <select name="filtro" id="filtro" onchange="this.form.submit()" class="form-control" >
+                    <option value="">Seleccionar categoria</option>
+                    {% for categoria in categoria %}
+                        <option value="{{categoria.id}}">{{ categoria.nombre }}</option>
+                    {%endfor%}
+                </select>
+            </form>
+            <div class="col-md-4"></div>
+            <div class="col-md-4 ">
+                <a href="#AgregarPersonalModal" data-toggle="modal" data-dismiss="modal"
+                    data-toggle="modal" data-dismiss="modal">
+                    {% if can_add_product %}
+                        <button type="button" class="btn btn-success" style="background-color: brown; border-color: brown;">
+                            Agregar Producto
+                            <i class="fas fa-plus-circle"></i>
+                        </button>
+                    {% endif %}
+                </a>
+            </div>
+        </div>
+        <div class="card card-body" style="overflow:scroll">
+            <table class="table table-hover table-primary" id="myTable" style="background-color: rgba(224, 208, 30, 0.144)">
+                <thead>
+                    <tr>
+                        <th># ID</th>
+                        <th>Descripcion</th>
+                        <th>Categoria</th>
+                        <th>Precio Unitario</th>
+                        <th>Precio x10</th>
+                        <th>Precio x25</th>
+                        <th>Precio x50</th>
+                        <th>Precio x100</th>
+                        <th>Precio x1000</th>
+                        {% if can_add_product %}
+                        <th>Opciones</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody class="text-dark">
+                    {% for producto in productos %}
+                    <tr>
+                        <td>{{producto.id}}</td>
+                        <td>{{producto.descripcion}}</td>
+                        <td>{{producto.categoria}}</td>
+                        
+                        <td>{{producto.preciox1}}</td>
+                        <td>{{producto.preciox10}}</td>
+                        <td>{{producto.preciox25}}</td>
+                        <td>{{producto.preciox50}}</td>
+                        <td>{{producto.preciox100}}</td>
+                        <td>{{producto.preciox1000}}</td>
+
+                        {% if can_add_product %}
+                            <td>
+                                <button onclick=" editarProducto('{{i.id}}','{{i.codigo}}','{{i.descripcion}}','{{i.categorias.id}}','{{i.precio}}','{{i.cantidad}}')" class="btn btn-dark-outline btn-sm" data-toggle="modal"
+                                    href="#EditarPersonalModal"><img src="{% static 'index/img/editar.png' %}" alt="Error"
+                                        width="30"></button>
+                                <button onclick="eliminarProducto('{{i.id}}')" class="btn btn-dark-outline btn-sm"
+                                    data-toggle="modal" href="#EliminarPersonalModal"><img
+                                        src="{% static 'index/img/delete.png' %}" alt="Error" width="30"></button>
+                            </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% if messages %}
+{% for message in messages %}
+<script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Error...',
+        text: "{{message}}",
+    })
+</script>
+{% endfor %}
+{% endif %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    // Obtén el dropdown del tipo de producto
+    const tipoProductoDropdown = document.getElementById("tipo_producto");
+
+    // Obtén los contenedores de los campos dinámicos
+    const camposUnidad = document.getElementById("campos_unidad");
+    const camposBulto = document.getElementById("campos_bulto");
+
+    // Función para mostrar/ocultar campos según la selección
+    function toggleFields() {
+        const tipoSeleccionado = tipoProductoDropdown.value;
+
+        if (tipoSeleccionado === "unidad") {
+            camposUnidad.style.display = "flex"; // Muestra los campos de unidad
+            camposBulto.style.display = "none"; // Oculta los campos de bulto
+            // Limpia los valores de los campos de bulto
+            camposBulto.querySelectorAll("input").forEach(input => input.value = "");
+        } else if (tipoSeleccionado === "bulto") {
+            camposUnidad.style.display = "none"; // Oculta los campos de unidad
+            camposBulto.style.display = "flex"; // Muestra los campos de bulto
+            // Limpia los valores de los campos de unidad
+            camposUnidad.querySelectorAll("input").forEach(input => input.value = "");
+        } else {
+            // Si no hay selección, oculta ambos
+            camposUnidad.style.display = "none";
+            camposBulto.style.display = "none";
+            // Limpia todos los valores
+            camposUnidad.querySelectorAll("input").forEach(input => input.value = "");
+            camposBulto.querySelectorAll("input").forEach(input => input.value = "");
+        }
+    }
+
+    // Agrega el evento de cambio al dropdown
+    tipoProductoDropdown.addEventListener("change", toggleFields);
+
+    // Llama a la función una vez para el estado inicial
+    toggleFields();
+    });
+
+    //funcion para hacer los calculos dinamicamente y que los resultados sean readonly
+    $(document).ready(function() {
+        function calcularPrecio() {
+            var costo = parseFloat($('#id_costo').val()) || 0;
+            var gananciax1 = parseFloat($('#id_gananciax1').val()) || 0;
+            var gananciax10 = parseFloat($('#id_gananciax10').val()) || 0;
+            var gananciax25 = parseFloat($('#id_gananciax25').val()) || 0;
+            var gananciax50 = parseFloat($('#id_gananciax50').val()) || 0;
+            var gananciax100 = parseFloat($('#id_gananciax100').val()) || 0;
+            var gananciax1000 = parseFloat($('#id_gananciax1000').val()) || 0;
+
+            if (costo && gananciax1) {
+                var preciox1 = (costo + (costo * (gananciax1 / 100)));
+                $('#id_preciox1').val(preciox1.toFixed(2));
+            }
+            if (costo && gananciax10) {
+                var preciox10 = (costo + (costo * (gananciax10 / 100))) * 10;
+                $('#id_preciox10').val(preciox10.toFixed(2));
+            }
+            if (costo && gananciax25) {
+            var preciox25 = (costo + (costo * (gananciax25 / 100))) * 25;
+            $('#id_preciox25').val(preciox25.toFixed(2));
+            }
+            if (costo && gananciax50) {
+                var preciox50 = (costo + (costo * (gananciax50 / 100))) * 50;
+                $('#id_preciox50').val(preciox50.toFixed(2));
+            }
+            if (costo && gananciax100) {
+                var preciox100 = (costo + (costo * (gananciax100 / 100))) * 100;
+                $('#id_preciox100').val(preciox100.toFixed(2));
+            }
+            if (costo && gananciax1000) {
+                var preciox1000 = (costo + (costo * (gananciax1000 / 100))) * 1000;
+                $('#id_preciox1000').val(preciox1000.toFixed(2));
+            }
+        }
+
+        $('#id_costo, #id_gananciax1, #id_gananciax10, #id_gananciax25, #id_gananciax50, #id_gananciax100, #id_gananciax1000').on('input', function() {
+            calcularPrecio();
+        });
+
+        // Inicializar el cálculo si hay valores preexistentes
+        calcularPrecio();
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        let inputCosto = document.getElementById("costo");
+        let inputGanancia = document.getElementById("gananciax1");
+        let inputPrecio = document.getElementById("preciox1");
+
+        function calcularPrecio() {
+            let costo = parseFloat(inputCosto.value) || 0;
+            let ganancia = parseFloat(inputGanancia.value) || 0;
+
+            if (ganancia > 0) {
+                let precioFinal = costo + (costo * (ganancia / 100));
+                inputPrecio.value = precioFinal.toFixed(2);
+            } else {
+                inputPrecio.value = "0"; // Si la ganancia es 0, el precio también es 0
+            }
+        }
+
+        // Detectar cambios en costo y ganancia
+        inputCosto.addEventListener("input", calcularPrecio);
+        inputGanancia.addEventListener("input", calcularPrecio);
+    });
+
+
+
+
+</script>
+
+
+{% endblock %}

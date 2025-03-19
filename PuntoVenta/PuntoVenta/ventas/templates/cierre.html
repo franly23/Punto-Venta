@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Cierre de Caja - {{ today }}</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Ventas en Efectivo -->
+            <div class="col-md-4">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>${{ ventas_efectivo }}</h3>
+                        <p>Ventas en Efectivo</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-money-bill"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ventas por Transferencia -->
+            <div class="col-md-4">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>${{ ventas_transferencia }}</h3>
+                        <p>Ventas por Transferencia</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-university"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ventas con Tarjeta -->
+            <div class="col-md-4">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>${{ ventas_tarjeta }}</h3>
+                        <p>Ventas con Tarjeta</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total del Día -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Total del Día</h3>
+                    </div>
+                    <div class="card-body">
+                        <h2 class="text-center">${{ total_dia }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botón para abrir el modal -->
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#cierreModal" style="margin: 20px 10px;">
+    Realizar Cierre
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="cierreModal" tabindex="-1" role="dialog" aria-labelledby="cierreModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="cierreForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cierreModalLabel">Cierre de Caja</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Totales del día:</strong></p>
+                    <ul>
+                        <li>Efectivo: $<span id="modalEfectivo"></span></li>
+                        <li>Transferencia: $<span id="modalTransferencia"></span></li>
+                        <li>Tarjeta: $<span id="modalTarjeta"></span></li>
+                        <li><strong>Total: $<span id="modalTotal"></span></strong></li>
+                    </ul>
+                    <div class="form-group">
+                        <label for="efectivoCaja">Efectivo en Caja</label>
+                        <input type="number" class="form-control" id="efectivoCaja" name="efectivoCaja" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="nota">Nota (opcional)</label>
+                        <textarea class="form-control" id="nota" name="nota" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="guardarCierre">Guardar y Descargar</button>
+                    <button type="button" class="btn btn-primary" id="imprimirCierre">Imprimir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Historial de cierres -->
+<div class="col-md-6">
+    <div class="box box-success">
+        <div class="box-header with-border">
+            <h3 class="box-title">Historial de cierres</h3>
+        </div>
+        <div class="box-body table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Total</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cierre in cierres %}
+                    <tr>
+                        <td>{{ cierre.fecha }}</td>
+                        <td>${{ cierre.total }}</td>
+                        <td>
+                            <a href="{% url 'descargar_cierre' cierre.id %}" class="btn btn-info btn-sm">
+                                <i class="fa fa-download"></i> Descargar
+                            </a>
+                            <a href="{% url 'imprimir_cierre' cierre.id %}" class="btn btn-primary btn-sm">
+                                <i class="fa fa-print"></i> Imprimir
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Cargar valores en el modal
+        document.querySelector("#cierreModal").addEventListener("show.bs.modal", function () {
+            document.querySelector("#modalEfectivo").textContent = ventas_efectivo;
+            document.querySelector("#modalTransferencia").textContent = ventas_transferencia;
+            document.querySelector("#modalTarjeta").textContent = ventas_tarjeta;
+            document.querySelector("#modalTotal").textContent = total_dia;
+        });
+
+        // Guardar y descargar CSV
+        document.querySelector("#guardarCierre").addEventListener("click", function () {
+            const efectivoCaja = document.querySelector("#efectivoCaja").value;
+            const nota = document.querySelector("#nota").value;
+
+            // Crear datos para el cierre
+            const cierreData = {
+                efectivoCaja: efectivoCaja,
+                nota: nota,
+                ventasEfectivo: ventas_efectivo,
+                ventasTransferencia: ventas_transferencia,
+                ventasTarjeta: ventas_tarjeta,
+                total: total_dia,
+            };
+
+            // Aquí puedes enviar cierreData al servidor con fetch() o generar el CSV directamente
+            console.log(cierreData); // Reemplazar con la lógica de guardado
+        });
+
+        // Imprimir cierre
+        document.querySelector("#imprimirCierre").addEventListener("click", function () {
+            window.print(); // Puedes personalizar esta lógica
+        });
+    });
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div>
+    <div id="EliminarPersonalModal" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info">
+                    <h5 class="modal-title text-dark">Eliminar</h5>
+                </div>
+                <div class="modal-body bg-dark text-white">
+                    <p class="labelmodal">¿Estás seguro?</p>
+                    <form method="POST" action="{% url 'DeleteVenta' %}">{% csrf_token %}
+                        <input type="hidden" id="id_producto_eliminar" name="id_producto_eliminar">
+                </div>
+                <div class="modal-footer bg-dark text-white">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">
+                        Volver
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        Aceptar
+                    </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <h3 class="text-center" style="margin-top: 10px; ">Ventas   <i class="fas fa-hand-holding-usd"></i></h3>
+            <div class="col-md-3 pb-2">
+                <a href="{% url 'AddVenta' %}">
+                    <button type="button" class="btn btn-success" style="background-color: brown; border-color: brown;">
+                        Agregar Venta
+                        <i class="fas fa-plus-circle"></i>
+                    </button>
+                </a>
+            </div>
+            <form class="col-md-3 pb-2" method="get" action="{% url 'Ventas' %}">
+                <label for="filtro">Filtrar ventas por:</label>
+                <select name="filtro" id="filtro" onchange="this.form.submit()" class="form-control">
+                    <option value="hoy" {% if filtro == 'hoy' %}selected{% endif %}>Hoy</option>
+                    <option value="mes" {% if filtro == 'mes' %}selected{% endif %}>Este mes</option>
+                    <option value="anio" {% if filtro == 'anio' %}selected{% endif %}>Este año</option>
+                </select>
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card card-body" style="overflow:scroll">
+                <table class="table table-hover table-primary" id="myTable" style="background-color: rgba(224, 208, 30, 0.144)">
+                    <thead>
+                        <tr>
+                            <th># ID</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Total $</th>
+                            <th>Metodo</th>
+                            <th>Comentarios</th>
+                            {% if is_jefe %}
+                                <th>Opciones</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody class="text-dark">
+                        {% for i in ventas %}
+                        <tr>
+                            <td>{{i.id}}</td>
+                            <td>{{i.fecha_pedido}}</td>
+                            <td>{{i.cliente}}</td>
+                            <td>${{i.total}}</td>
+                            <td>{{i.metodo_pago}}</td>
+                            <td>{{i.comentarios}}</td>
+                            {% if is_jefe %}
+                                <td>
+                                    <button class="btn btn-dark-outline btn-sm btn-delete" data-id="{{ i.id }}">
+                                        <img src="{% static 'index/img/delete.png' %}" alt="Error" width="30">
+                                    </button>
+                                </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.btn-delete').forEach(button => {
+            button.addEventListener('click', function () {
+                const ventaId = this.dataset.id;
+
+                if (confirm("¿Estás seguro de que deseas eliminar esta venta?")) {
+                    fetch('delete_venta/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ id: ventaId }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            alert(`Error: ${data.error}`);
+                        } else {
+                            alert(data.message);
+                            location.reload(); // Recargar la página para actualizar la tabla
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                }
+            });
+        });
+    });
+
+</script>
+
+{% endblock %}
